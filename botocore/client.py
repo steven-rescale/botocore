@@ -77,7 +77,7 @@ _LEGACY_SIGNATURE_VERSIONS = frozenset(
 )
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('jobs.debug_boto')
 history_recorder = get_global_history_recorder()
 
 
@@ -955,11 +955,13 @@ class BaseClient:
             'has_streaming_input': operation_model.has_streaming_input,
             'auth_type': operation_model.auth_type,
         }
+        logger.debug(f'request_context: {request_context!r}')
         api_params = self._emit_api_params(
             api_params=api_params,
             operation_model=operation_model,
             context=request_context,
         )
+        logger.debug(f'api_params: {api_params!r}')
         (
             endpoint_url,
             additional_headers,
@@ -967,6 +969,7 @@ class BaseClient:
         ) = self._resolve_endpoint_ruleset(
             operation_model, api_params, request_context
         )
+        logger.debug(f'url: {endpoint_url} headers: {additional_headers!r} props: {properties!r}')
         if properties:
             # Pass arbitrary endpoint info with the Request
             # for use during construction.
@@ -978,6 +981,7 @@ class BaseClient:
             context=request_context,
             headers=additional_headers,
         )
+        logger.debug(f'request: {request_dict!r}')
         resolve_checksum_context(request_dict, operation_model, api_params)
 
         service_id = self._service_model.service_id.hyphenize()
@@ -1001,6 +1005,8 @@ class BaseClient:
             http, parsed_response = self._make_request(
                 operation_model, request_dict, request_context
             )
+
+        logger.debug(f'response: {http.status_code} headers: {http.headers!r}')
 
         self.meta.events.emit(
             'after-call.{service_id}.{operation_name}'.format(
